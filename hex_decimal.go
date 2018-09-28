@@ -33,24 +33,24 @@ var keyMap = createKeyMap()
 var charMap = createCharMap(keyMap)
 var keyLen = len(keyMap)
 
-func decimalToHexAny(decimal int) string {
-	n := len(keyMap)
+func decimalToHexAny(decimal int64) string {
+	n := int64(len(keyMap))
 	var hex string
-	var reminder int
+	var reminder int64
 	for decimal != 0 {
 		reminder = decimal % n
 		decimal = decimal / n
-		hex = keyMap[reminder] + hex
+		hex = keyMap[int(reminder)] + hex
 	}
 	return hex
 }
 
-func hexAnyToDecimal(hex string) int {
+func hexAnyToDecimal(hex string) int64 {
 	chars := strings.Split(hex, "")
 	var ret, base float64
 	for i := 0; i < len(chars); i++ {
 		base = float64(charMap[chars[i]])
 		ret += base * math.Pow(float64(keyLen), float64(len(chars)-i-1))
 	}
-	return int(ret)
+	return int64(ret)
 }

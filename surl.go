@@ -91,7 +91,7 @@ func main() {
 		if url, err = surl.Find(int64(id)); err != nil {
 			log.Fatal(err)
 		}
-		log.Println(url)
+		log.Printf("surl: /%s, url: %s\n", decimalToHexAny(int64(id)), url)
 	default:
 		log.Fatal("invalid command")
 	}
