@@ -9,7 +9,7 @@ type Index struct {
 }
 
 const (
-	indexSize int64 = 5
+	indexSize int64 = 6
 )
 
 func (idx *Index) NextID() (id int64, err error) {
@@ -18,6 +18,30 @@ func (idx *Index) NextID() (id int64, err error) {
 		return
 	}
 	id = stat.Size() / indexSize
+	return
+}
+
+func (idx *Index) IDOccupied(id int64) (occupied bool, err error) {
+	var nextID int64
+	if nextID, err = idx.NextID(); err != nil {
+		return
+	}
+	if id >= nextID {
+		occupied = false
+		return
+	}
+	buf := make([]byte, 6, 6)
+	if _, err = idx.file.ReadAt(buf, id*indexSize); err != nil {
+		return
+	}
+
+	for _, byte := range buf {
+		if byte != 0 {
+			occupied = true
+			return
+		}
+	}
+	occupied = false
 	return
 }
 
@@ -31,21 +55,16 @@ func (idx *Index) WriteAt(coordinate Coordinate, id int64) (err error) {
 	return
 }
 
-func (idx *Index) CoordinateOfID(id int64) (start Coordinate, end Coordinate, err error) {
-	buf := make([]byte, 5)
+func (idx *Index) CoordinateOfID(id int64) (coordinate Coordinate, err error) {
+	buf := make([]byte, 6, 6)
 	if _, err = idx.file.ReadAt(buf, id*indexSize); err != nil {
 		return
 	}
-	end = NewCoordinate(buf)
-	prevID := id - 1
-	if prevID < 0 {
-		start = NewCoordinate([]byte{0, 0, 0, 0, 0})
+	var bytes [6]byte
+	copy(bytes[:], buf)
+	if coordinate, err = NewCoordinate(bytes); err != nil {
 		return
 	}
-	if _, err = idx.file.ReadAt(buf, prevID*indexSize); err != nil {
-		return
-	}
-	start = NewCoordinate(buf)
 	return
 }
 

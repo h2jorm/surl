@@ -34,6 +34,9 @@ var charMap = createCharMap(keyMap)
 var keyLen = len(keyMap)
 
 func decimalToHexAny(decimal int64) string {
+	if decimal == 0 {
+		return keyMap[0]
+	}
 	n := int64(len(keyMap))
 	var hex string
 	var reminder int64

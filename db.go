@@ -25,11 +25,11 @@ func (db *DB) WriteAt(url string, coordinate Coordinate) (err error) {
 	return
 }
 
-func (db *DB) UrlOfCoordinate(start Coordinate, end Coordinate) (url string, err error) {
-	offset1 := start.Offset()
-	offset2 := end.Offset()
-	buf := make([]byte, offset2-offset1)
-	if _, err = db.file.ReadAt(buf, offset1); err != nil {
+func (db *DB) UrlOfCoordinate(coordinate Coordinate) (url string, err error) {
+	len := coordinate.Len()
+	offset := coordinate.Offset()
+	buf := make([]byte, len)
+	if _, err = db.file.ReadAt(buf, offset); err != nil {
 		return
 	}
 	url = string(buf)
