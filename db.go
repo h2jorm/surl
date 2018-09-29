@@ -1,46 +1,37 @@
-package main
+package surl
 
 import (
 	"math"
 	"os"
 )
 
-type DB struct {
+type store struct {
 	file *os.File
 }
 
-func (db *DB) CurrentCoordinate() (coordinate Coordinate, err error) {
+func (db *store) nextCoordinate() (coor coordinate, err error) {
 	var stat os.FileInfo
 	if stat, err = db.file.Stat(); err != nil {
 		return
 	}
 	partition := stat.Size() / int64(math.Pow(2, 32))
 	pos := stat.Size() % int64(math.Pow(2, 32))
-	coordinate = Coordinate{partition: uint8(partition), pos: uint32(pos)}
+	coor = coordinate{partition: uint8(partition), pos: uint32(pos)}
 	return
 }
 
-func (db *DB) WriteAt(url string, coordinate Coordinate) (err error) {
-	_, err = db.file.WriteAt([]byte(url), coordinate.Offset())
+func (db *store) writeAt(url string, coor coordinate) (err error) {
+	_, err = db.file.WriteAt([]byte(url), coor.offset())
 	return
 }
 
-func (db *DB) UrlOfCoordinate(coordinate Coordinate) (url string, err error) {
-	len := coordinate.Len()
-	offset := coordinate.Offset()
+func (db *store) urlOfCoordinate(coor coordinate) (url string, err error) {
+	len := coor.len
+	offset := coor.offset()
 	buf := make([]byte, len)
 	if _, err = db.file.ReadAt(buf, offset); err != nil {
 		return
 	}
 	url = string(buf)
-	return
-}
-
-func NewDB() (db *DB, err error) {
-	var file *os.File
-	if file, err = os.OpenFile("./data/db", os.O_RDWR|os.O_CREATE, 0700); err != nil {
-		return
-	}
-	db = &DB{file: file}
 	return
 }

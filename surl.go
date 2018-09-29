@@ -1,109 +1,67 @@
-package main
+package surl
 
 import (
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
+// SURL is a operation collection of surl db and index file.
 type SURL struct {
-	index *Index
-	db    *DB
+	index *index
+	db    *store
 }
 
+// Create creates a new record with id.
 func (surl *SURL) Create(id int64, url string) (err error) {
 	var occupied bool
-	if occupied, err = surl.index.IDOccupied(id); occupied || err != nil {
+	if occupied, err = surl.index.idOccupied(id); occupied || err != nil {
 		err = errors.New("id " + strconv.FormatInt(id, 10) + " is occupied")
 		return
 	}
-	var coordinate Coordinate
-	if coordinate, err = surl.db.CurrentCoordinate(); err != nil {
+	var coor coordinate
+	if coor, err = surl.db.nextCoordinate(); err != nil {
 		return
 	}
-	coordinate.len = uint16(len(url))
-	if err = surl.index.WriteAt(coordinate, id); err != nil {
+	coor.len = uint16(len(url))
+	if err = surl.index.writeAt(coor, id); err != nil {
 		return
 	}
-	if err = surl.db.WriteAt(url, coordinate); err != nil {
+	if err = surl.db.writeAt(url, coor); err != nil {
 		return
 	}
-	log.Printf("ID: %d, Coordinate: %s\n", id, coordinate.String())
+	log.Printf("ID: %d, coordinate: %s\n", id, coor.String())
 	return
 }
 
+// Find retrives a record by id.
 func (surl *SURL) Find(id int64) (url string, err error) {
-	var coordinate Coordinate
-	if coordinate, err = surl.index.CoordinateOfID(id); err != nil {
+	var coor coordinate
+	if coor, err = surl.index.coordinateOfID(id); err != nil {
 		return
 	}
-	log.Printf("Find ID: %d, Coordinate: %s\n", id, coordinate.String())
-	if url, err = surl.db.UrlOfCoordinate(coordinate); err != nil {
+	log.Printf("Find ID: %d, coordinate: %s\n", id, coor.String())
+	if url, err = surl.db.urlOfCoordinate(coor); err != nil {
 		return
 	}
 	return
 }
 
-func NewSURL() (surl *SURL, err error) {
-	var db *DB
-	var index *Index
-	if db, err = NewDB(); err != nil {
+// NewSURL returns a new SURL struct
+func NewSURL(datapath string) (surl *SURL, err error) {
+	var dbfile *os.File
+	var indexfile *os.File
+	if dbfile, err = os.OpenFile(filepath.Join(datapath, "_.db"), os.O_RDWR|os.O_CREATE, 0700); err != nil {
 		return
 	}
-	if index, err = NewIndex(); err != nil {
+	if indexfile, err = os.OpenFile(filepath.Join(datapath, "_.index"), os.O_RDWR|os.O_CREATE, 0700); err != nil {
 		return
 	}
 	surl = &SURL{
-		index: index,
-		db:    db,
+		index: &index{file: indexfile},
+		db:    &store{file: dbfile},
 	}
 	return surl, nil
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
-
-func main() {
-	var err error
-	var surl *SURL
-	surl, err = NewSURL()
-
-	if len(os.Args) < 2 {
-		log.Fatal("usage surl <command>")
-	}
-
-	switch os.Args[1] {
-	case "create":
-		if len(os.Args) < 3 {
-			log.Fatal("usage surl create <id> <url>")
-		}
-		var id int
-		if id, err = strconv.Atoi(os.Args[2]); err != nil {
-			log.Fatal(err)
-		}
-		url := os.Args[3]
-		if url == "" {
-			log.Fatal("undefined url")
-		}
-		err = surl.Create(int64(id), url)
-		if err != nil {
-			log.Fatal(err)
-		}
-	case "find":
-		var id int
-		var url string
-		if id, err = strconv.Atoi(os.Args[2]); err != nil {
-			log.Fatal(err)
-		}
-		if url, err = surl.Find(int64(id)); err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("surl: /%s, url: %s\n", decimalToHexAny(int64(id)), url)
-	default:
-		log.Fatal("invalid command")
-	}
 }

@@ -1,18 +1,14 @@
-package main
+package surl
 
 import (
-	"io/ioutil"
-	"log"
 	"math"
 	"strings"
 )
 
+const hexString = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
 func createKeyMap() map[int]string {
-	var bytes []byte
-	var err error
-	if bytes, err = ioutil.ReadFile("./key_map.txt"); err != nil {
-		log.Fatal(err.Error())
-	}
+	bytes := []byte(hexString)
 	var result = make(map[int]string, len(bytes))
 	var l = len(bytes)
 	for i := 0; i < l; i++ {
@@ -33,7 +29,8 @@ var keyMap = createKeyMap()
 var charMap = createCharMap(keyMap)
 var keyLen = len(keyMap)
 
-func decimalToHexAny(decimal int64) string {
+// DecimalToHexAny turns a decimal to 62hex.
+func DecimalToHexAny(decimal int64) string {
 	if decimal == 0 {
 		return keyMap[0]
 	}
@@ -48,7 +45,8 @@ func decimalToHexAny(decimal int64) string {
 	return hex
 }
 
-func hexAnyToDecimal(hex string) int64 {
+// HexAnyToDecimal turns a 62hex to decimal.
+func HexAnyToDecimal(hex string) int64 {
 	chars := strings.Split(hex, "")
 	var ret, base float64
 	for i := 0; i < len(chars); i++ {
