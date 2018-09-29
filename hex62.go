@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+// Mapping defines algorithm mapping between decimal and string.
+type Mapping interface {
+	// Itoa decimal to hex string
+	Itoa(int64) string
+	// Atoi hex string to decimal
+	Atoi(string) int64
+}
+
 const hexString = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 func createKeyMap() map[int]string {
@@ -29,8 +37,11 @@ var keyMap = createKeyMap()
 var charMap = createCharMap(keyMap)
 var keyLen = len(keyMap)
 
-// DecimalToHexAny turns a decimal to 62hex.
-func DecimalToHexAny(decimal int64) string {
+// hex62 is the default transformer of surl.
+type hex62 struct{}
+
+// Itoa encodes int64 number to hex string
+func (transformer hex62) Itoa(decimal int64) string {
 	if decimal == 0 {
 		return keyMap[0]
 	}
@@ -45,8 +56,8 @@ func DecimalToHexAny(decimal int64) string {
 	return hex
 }
 
-// HexAnyToDecimal turns a 62hex to decimal.
-func HexAnyToDecimal(hex string) int64 {
+// Atoi decodes hex string to int64 number
+func (transformer hex62) Atoi(hex string) int64 {
 	chars := strings.Split(hex, "")
 	var ret, base float64
 	for i := 0; i < len(chars); i++ {
