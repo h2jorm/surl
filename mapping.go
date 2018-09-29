@@ -37,10 +37,8 @@ var keyMap = createKeyMap()
 var charMap = createCharMap(keyMap)
 var keyLen = len(keyMap)
 
-// hex62 is the default transformer of surl.
 type hex62 struct{}
 
-// Itoa encodes int64 number to hex string
 func (transformer hex62) Itoa(decimal int64) string {
 	if decimal == 0 {
 		return keyMap[0]
@@ -56,7 +54,6 @@ func (transformer hex62) Itoa(decimal int64) string {
 	return hex
 }
 
-// Atoi decodes hex string to int64 number
 func (transformer hex62) Atoi(hex string) int64 {
 	chars := strings.Split(hex, "")
 	var ret, base float64
@@ -66,3 +63,8 @@ func (transformer hex62) Atoi(hex string) int64 {
 	}
 	return int64(ret)
 }
+
+var (
+	// Hex62 is the default transformer of surl.
+	Hex62 = hex62{}
+)
