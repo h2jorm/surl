@@ -9,7 +9,7 @@ import (
 
 // 0    1    2    3    4    5    6    7    0    1    2    3    4    5    6    7
 // +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-// +     partition     +                     length                           +
+// +          partition          +                   length                   +
 // +                           position                                       +
 // +                           position                                       +
 
@@ -21,7 +21,7 @@ type coordinate struct {
 
 func (c *coordinate) Bytes() (ret []byte, err error) {
 	buf := new(bytes.Buffer)
-	head := uint16(c.partition&0x0f)<<12 + c.len&0x0fff
+	head := uint16(c.partition)<<10 + c.len<<6>>6
 	if err = binary.Write(buf, binary.BigEndian, head); err != nil {
 		return
 	}
@@ -42,8 +42,8 @@ func (c coordinate) String() string {
 
 func newCoordinate(bs [6]byte) (coor coordinate, err error) {
 	head := binary.BigEndian.Uint16(bs[0:2])
-	partition := uint8(head & 0xf000 >> 12)
-	len := head & 0x0fff
+	partition := uint8(head >> 10)
+	len := head << 6 >> 6
 	pos := binary.BigEndian.Uint32(bs[2:6])
 	coor = coordinate{partition: partition, len: len, pos: pos}
 	return
