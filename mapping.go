@@ -13,7 +13,7 @@ type Mapping interface {
 	Atoi(string) int64
 }
 
-const hexString = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+const hexString = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 func createKeyMap() map[int]string {
 	bytes := []byte(hexString)
