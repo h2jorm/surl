@@ -46,12 +46,12 @@ func (m hex62) Itoa(decimal int64) string {
 	return hex
 }
 
-func (m hex62) Atoi(hex string) int64 {
+func (m hex62) Atoi(hex string) (int64, error) {
 	chars := strings.Split(hex, "")
 	var ret, base float64
 	for i := 0; i < len(chars); i++ {
 		base = float64(charMap[chars[i]])
 		ret += base * math.Pow(float64(keyLen), float64(len(chars)-i-1))
 	}
-	return int64(ret)
+	return int64(ret), nil
 }

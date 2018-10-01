@@ -5,7 +5,7 @@ type Mapping interface {
 	// Itoa decimal to hex string
 	Itoa(int64) string
 	// Atoi hex string to decimal
-	Atoi(string) int64
+	Atoi(string) (int64, error)
 }
 
 var (
