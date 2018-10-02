@@ -59,12 +59,12 @@ const (
 	indexSize int64 = 6
 )
 
-type BasicStore struct {
+type BasicStorage struct {
 	IndexFile *os.File
 	DBFile    *os.File
 }
 
-func (s *BasicStore) NextID() (id int64, err error) {
+func (s *BasicStorage) NextID() (id int64, err error) {
 	var stat os.FileInfo
 	if stat, err = s.IndexFile.Stat(); err != nil {
 		return
@@ -73,7 +73,7 @@ func (s *BasicStore) NextID() (id int64, err error) {
 	return
 }
 
-func (s *BasicStore) Insert(id int64, u *url.URL) (err error) {
+func (s *BasicStorage) Insert(id int64, u *url.URL) (err error) {
 	var occupied bool
 	if occupied, err = s.idOccupied(id); occupied || err != nil {
 		err = errors.New("id " + strconv.FormatInt(id, 10) + " is occupied")
@@ -93,7 +93,7 @@ func (s *BasicStore) Insert(id int64, u *url.URL) (err error) {
 	return
 }
 
-func (s *BasicStore) Query(id int64) (u *url.URL, err error) {
+func (s *BasicStorage) Query(id int64) (u *url.URL, err error) {
 	var coor coordinate
 	if coor, err = s.coordinateOfID(id); err != nil {
 		return
@@ -102,7 +102,7 @@ func (s *BasicStore) Query(id int64) (u *url.URL, err error) {
 	return
 }
 
-func (store *BasicStore) nextCoordinate() (coor coordinate, err error) {
+func (store *BasicStorage) nextCoordinate() (coor coordinate, err error) {
 	var stat os.FileInfo
 	if stat, err = store.DBFile.Stat(); err != nil {
 		return
@@ -113,12 +113,12 @@ func (store *BasicStore) nextCoordinate() (coor coordinate, err error) {
 	return
 }
 
-func (store *BasicStore) writeUrlAtCoordinate(u *url.URL, coor coordinate) (err error) {
+func (store *BasicStorage) writeUrlAtCoordinate(u *url.URL, coor coordinate) (err error) {
 	_, err = store.DBFile.WriteAt([]byte(u.String()), coor.offset())
 	return
 }
 
-func (store *BasicStore) urlOfCoordinate(coor coordinate) (u *url.URL, err error) {
+func (store *BasicStorage) urlOfCoordinate(coor coordinate) (u *url.URL, err error) {
 	len := coor.len
 	offset := coor.offset()
 	buf := make([]byte, len)
@@ -129,7 +129,7 @@ func (store *BasicStore) urlOfCoordinate(coor coordinate) (u *url.URL, err error
 	return
 }
 
-func (store *BasicStore) idOccupied(id int64) (occupied bool, err error) {
+func (store *BasicStorage) idOccupied(id int64) (occupied bool, err error) {
 	var nextID int64
 	if nextID, err = store.NextID(); err != nil {
 		return
@@ -153,7 +153,7 @@ func (store *BasicStore) idOccupied(id int64) (occupied bool, err error) {
 	return
 }
 
-func (store *BasicStore) writeCoordinateAtID(coor coordinate, id int64) (err error) {
+func (store *BasicStorage) writeCoordinateAtID(coor coordinate, id int64) (err error) {
 	var bytes []byte
 	if bytes, err = coor.Bytes(); err != nil {
 		return
@@ -163,7 +163,7 @@ func (store *BasicStore) writeCoordinateAtID(coor coordinate, id int64) (err err
 	return
 }
 
-func (store *BasicStore) coordinateOfID(id int64) (coor coordinate, err error) {
+func (store *BasicStorage) coordinateOfID(id int64) (coor coordinate, err error) {
 	buf := make([]byte, 6, 6)
 	if _, err = store.IndexFile.ReadAt(buf, id*indexSize); err != nil {
 		return
@@ -176,7 +176,7 @@ func (store *BasicStore) coordinateOfID(id int64) (coor coordinate, err error) {
 	return
 }
 
-func NewBasicStore(dirname string) (store *BasicStore, err error) {
+func NewBasicStore(dirname string) (store *BasicStorage, err error) {
 	var indexFile, dbFile *os.File
 	if indexFile, err = os.OpenFile(path.Join(dirname, "_.index"), os.O_CREATE|os.O_RDWR, 0700); err != nil {
 		log.Fatal(err)
@@ -184,7 +184,7 @@ func NewBasicStore(dirname string) (store *BasicStore, err error) {
 	if dbFile, err = os.OpenFile(path.Join(dirname, "_.db"), os.O_CREATE|os.O_RDWR, 0700); err != nil {
 		log.Fatal(err)
 	}
-	store = &BasicStore{
+	store = &BasicStorage{
 		IndexFile: indexFile,
 		DBFile:    dbFile,
 	}

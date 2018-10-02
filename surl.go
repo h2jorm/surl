@@ -6,16 +6,16 @@ import (
 	"sync"
 )
 
-// Generator is the main entry to store and retrieve `URLUnit`
-type Generator struct {
+// SURL is the main entry to store and retrieve `URLUnit`
+type SURL struct {
 	Mapping Mapping
-	Store   Store
+	Storage Storage
 	Root    *url.URL
 	lock    *sync.Mutex
 }
 
 // Shorten encodes a url to surl
-func (g *Generator) Shorten(u *url.URL, ids ...int64) (surl *url.URL, err error) {
+func (g *SURL) Shorten(u *url.URL, ids ...int64) (surl *url.URL, err error) {
 	if g.lock == nil {
 		g.lock = &sync.Mutex{}
 	}
@@ -23,13 +23,13 @@ func (g *Generator) Shorten(u *url.URL, ids ...int64) (surl *url.URL, err error)
 	defer g.lock.Unlock()
 	var id int64
 	if len(ids) != 1 {
-		if id, err = g.Store.NextID(); err != nil {
+		if id, err = g.Storage.NextID(); err != nil {
 			return
 		}
 	} else {
 		id = ids[0]
 	}
-	if err = g.Store.Insert(id, u); err != nil {
+	if err = g.Storage.Insert(id, u); err != nil {
 		return
 	}
 	surl = &url.URL{
@@ -41,7 +41,7 @@ func (g *Generator) Shorten(u *url.URL, ids ...int64) (surl *url.URL, err error)
 }
 
 // Parse decodes a surl to its original url
-func (g *Generator) Parse(surl *url.URL) (u *url.URL, err error) {
+func (g *SURL) Parse(surl *url.URL) (u *url.URL, err error) {
 	if surl.Scheme != g.Root.Scheme || surl.Host != g.Root.Host {
 		err = errors.New("invalid surl")
 		return
@@ -54,7 +54,7 @@ func (g *Generator) Parse(surl *url.URL) (u *url.URL, err error) {
 	if id, err = g.Mapping.Atoi(path); err != nil {
 		return
 	}
-	if u, err = g.Store.Query(id); err != nil {
+	if u, err = g.Storage.Query(id); err != nil {
 		return
 	}
 	return
